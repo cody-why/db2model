@@ -1,0 +1,83 @@
+use axum::response::IntoResponse;
+use axum::routing::{post, put, delete};
+use axum::Router;
+
+use crate::service::{{ table.table_name | lower }}_service;
+use crate::vo::{{ table.table_name | lower }}_vo::*;
+use crate::vo::Response;
+use crate::Json;
+
+pub fn router<S>() -> Router<S>
+where
+    S: Clone + Send + Sync + 'static,
+{
+    Router::new()
+        .route("/{{ table.table_name | lower }}_list", post({{ table.table_name | lower }}_list))
+        .route("/{{ table.table_name | lower }}", post({{ table.table_name | lower }}_save).put({{ table.table_name | lower }}_update).delete({{ table.table_name | lower }}_delete))
+}
+
+/// 查询
+#[utoipa::path(
+    post,
+    tag = "{{ table.table_name | lower }}",
+    path = "/admin/{{ table.table_name | lower }}_list",
+    request_body = {{ table.struct_name}}ListReq,
+    security(("token"=[])),
+    responses(
+        (status = 200, description = "操作成功, code=0, data=[{{ table.struct_name}}ListData]", body = BaseResponse),
+    )
+)]
+pub async fn {{ table.table_name | lower }}_list(Json(item): Json<{{ table.struct_name}}ListReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_list(item).await;
+    let total = result.as_ref().map(|data| data.total).unwrap_or(0);
+    let result = result.map(|data| data.records);
+    Response::result_page(result, total)
+}
+
+/// 添加
+#[utoipa::path(
+    post,
+    tag = "{{ table.table_name | lower }}",
+    path = "/admin/{{ table.table_name | lower }}",
+    request_body = {{ table.struct_name}}SaveReq,
+    security(("token"=[])),
+    responses(
+        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+    )
+)]
+pub async fn {{ table.table_name | lower }}_save(Json(item): Json<{{ table.struct_name}}SaveReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_save(item).await;
+    Response::result(result)
+}
+
+/// 更新
+#[utoipa::path(
+    put,
+    tag = "{{ table.table_name | lower }}",
+    path = "/admin/{{ table.table_name | lower }}",
+    request_body = {{ table.struct_name}}UpdateReq,
+    security(("token"=[])),
+    responses(
+        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+    )
+)]
+pub async fn {{ table.table_name | lower }}_update(Json(item): Json<{{ table.struct_name}}UpdateReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_update(item).await;
+    Response::result(result)
+}
+
+/// 删除
+#[utoipa::path(
+    delete,
+    tag = "{{ table.table_name | lower }}",
+    path = "/admin/{{ table.table_name | lower }}",
+    request_body = {{ table.struct_name}}DeleteReq,
+    security(("token"=[])),
+    responses(
+        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+    )
+)]
+pub async fn {{ table.table_name | lower }}_delete(Json(item): Json<{{ table.struct_name}}DeleteReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_delete(item).await;
+    Response::result(result)
+}

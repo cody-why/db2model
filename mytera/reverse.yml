@@ -1,0 +1,12 @@
+host: 172.17.99.45
+port: 3306
+username: root
+password: 789789
+database: admin_cw
+# schemaname: test # only postgres enable
+# include_tables: # Include tables, can be ignored.
+#  - table_name
+exclude_tables: # Exclude, tables, can be ignored.
+#  - table_name
+  - casbin_rule
+output_dir: src/model # code output directory

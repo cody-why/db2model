@@ -1,0 +1,88 @@
+use crate::model::{{ table.struct_name | lower }}::{{ table.struct_name }};
+use crate::utils::format_date_option;
+use rbatis::rbdc::DateTime;
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct {{ table.struct_name }}ListReq {
+    pub page_no: u64,
+    #[schema(example = 10)]
+    pub page_size: u64,
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Serialize, Clone, ToSchema)]
+pub struct {{ table.struct_name }}ListData {
+    {%- for v in table.fields %}
+    pub {{ v.field_name }}: {% if v.is_null == 1 %}Option<{% endif %}{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}{% if v.is_null == 1 %}>{% endif %},
+    {%- endfor %}
+}
+
+impl From<{{ table.struct_name }}> for {{ table.struct_name }}ListData {
+    fn from(item: {{ table.struct_name }}) -> Self {
+        Self {
+            {%- for v in table.fields %}
+            {{ v.field_name }}: {% if v.field_type == "DateTime" %}format_date_option(item.{{ v.field_name }}){% else %}item.{{ v.field_name }}{% endif %},
+            {%- endfor %}
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct {{ table.struct_name }}SaveReq {
+    {%- for v in table.fields %}
+    {%- if v.field_name != "id" and v.field_name != "create_time" and v.field_name != "update_time" %}
+    pub {{ v.field_name }}: {% if v.is_null == 1 %}Option<{% endif %}{{ v.field_type }}{% if v.is_null == 1 %}>{% endif %},
+    {%- endif %}
+    {%- endfor %}
+}
+
+impl From<{{ table.struct_name }}SaveReq> for {{ table.struct_name }} {
+    fn from(req: {{ table.struct_name }}SaveReq) -> Self {
+        let now = Some(DateTime::now());
+        Self {
+            id: None,
+            {%- for v in table.fields %}
+            {%- if v.field_name != "id" and v.field_name != "create_time" and v.field_name != "update_time" %}
+            {{ v.field_name }}: req.{{ v.field_name }},
+            {%- endif %}
+            {%- endfor %}
+            create_time: now.clone(),
+            update_time: now,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct {{ table.struct_name }}UpdateReq {
+    pub id: u64,
+    {%- for v in table.fields %}
+    {%- if v.field_name != "id" and v.field_name != "create_time" and v.field_name != "update_time" %}
+    pub {{ v.field_name }}: {% if v.is_null == 1 %}Option<{% endif %}{{ v.field_type }}{% if v.is_null == 1 %}>{% endif %},
+    {%- endif %}
+    {%- endfor %}
+}
+
+rbatis::impl_update!({{ table.struct_name }}UpdateReq {}, "{{ table.table_name }}");
+
+impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
+    fn from(req: {{ table.struct_name }}UpdateReq) -> Self {
+        let now = Some(DateTime::now());
+        Self {
+            id: Some(req.id),
+            {%- for v in table.fields %}
+            {%- if v.field_name != "id" and v.field_name != "create_time" and v.field_name != "update_time" %}
+            {{ v.field_name }}: req.{{ v.field_name }},
+            {%- endif %}
+            {%- endfor %}
+            create_time: None,
+            update_time: now,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct {{ table.struct_name }}DeleteReq {
+    pub ids: Vec<u64>,
+}
