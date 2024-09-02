@@ -1,45 +1,45 @@
 use rbatis::Page;
 use rbatis::PageRequest;
 
-use crate::model::{{ table.table_name | lower }}::{{ table.struct_name}};
+use crate::model::{{ table.table_name | lower }}::{{ table.struct_name }};
 use crate::pool;
 use crate::vo::{{ table.table_name | lower }}_vo::*;
-use crate::Error;
 use crate::Result;
 
-pub async fn {{ table.table_name | lower }}_list(item: {{ table.struct_name}}ListReq) -> Result<Page<{{ table.struct_name}}ListData>> {
+pub async fn {{ table.table_name | lower }}_list(item: {{ table.struct_name }}ListReq) -> Result<Page<{{ table.struct_name }}Vo>> {
     let rb = pool!();
     let name = item.name;
+    let status = item.status;
 
     let page_req = PageRequest::new(item.page_no, item.page_size);
-    let result = {{ table.struct_name}}::select_page_by_name(rb, &page_req, name).await?;
+    let result = {{ table.struct_name }}::select_page_by_name(rb, &page_req, name, status).await?;
 
-    let page = Page::<{{ table.struct_name}}ListData>::from(result);
+    let page = Page::<{{ table.struct_name }}Vo>::from(result);
     Ok(page)
 }
 
-pub async fn {{ table.table_name | lower }}_save(item: {{ table.struct_name}}SaveReq) -> Result<u64> {
+// 添加
+pub async fn {{ table.table_name | lower }}_save(item: {{ table.struct_name }}Vo) -> Result<u64> {
     let rb = pool!();
 
-    let {{ table.table_name | lower }} = {{ table.struct_name}}::from(item);
+    let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
 
-    let result = {{ table.struct_name}}::insert(rb, &{{ table.table_name | lower }}).await?;
+    let result = {{ table.struct_name }}::insert(rb, &{{ table.table_name | lower }}).await?;
     Ok(result.rows_affected)
 }
 
-pub async fn {{ table.table_name | lower }}_update(item: {{ table.struct_name}}UpdateReq) -> Result<u64> {
+// 更新
+pub async fn {{ table.table_name | lower }}_update(item: {{ table.struct_name }}Vo) -> Result<u64> {
     let rb = pool!();
-    let {{ table.table_name | lower }} = {{ table.struct_name}}::from(item);
-    let result = {{ table.struct_name}}::update_by_column(rb, &{{ table.table_name | lower }}, "id").await?;
+    let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
+    let result = {{ table.struct_name }}::update_by_column(rb, &{{ table.table_name | lower }}, "id").await?;
     Ok(result.rows_affected)
 }
 
-pub async fn {{ table.table_name | lower }}_delete(item: {{ table.struct_name}}DeleteReq) -> Result<u64> {
+// 删除
+pub async fn {{ table.table_name | lower }}_delete(item: {{ table.struct_name }}DeleteReq) -> Result<u64> {
     let rb = pool!();
-    let mut count = 0;
-    for id in item.ids {
-        let result = {{ table.struct_name}}::delete_by_column(rb, "id", &id).await?;
-        count += result.rows_affected;
-    }
-    Ok(count)
+
+    let result = {{ table.struct_name }}::delete_in_column(rb, "id", &item.ids).await?;
+    Ok(result.rows_affected)
 }
