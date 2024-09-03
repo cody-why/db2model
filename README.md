@@ -8,8 +8,8 @@ cargo install sql_reverse
 ## reverse sample
 sql_reverse mysql -f templates/reverse.yml -p 'templates/*' -n rbatis.tera -c templates/mysql_rbatis.json
 
-## my reverse
-sh reverse.sh
+## 使用python命名文件名
+python3 reverse.py
 
 ## Template Struct:
 ```rust

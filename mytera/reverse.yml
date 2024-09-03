@@ -13,4 +13,4 @@ include_tables: # Include tables.
 exclude_tables: # Exclude, tables, can be ignored.
 #  - table_name
   - casbin_rule
-output_dir: src/model # code output directory
+output_dir: generated # code output directory
