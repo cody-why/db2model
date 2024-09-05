@@ -5,8 +5,9 @@ use crate::model::{{ table.table_name | lower }}::{{ table.struct_name }};
 use crate::pool;
 use crate::vo::{{ table.table_name | lower }}_vo::*;
 use crate::Result;
+use crate::Error;
 
-pub async fn {{ table.table_name | lower }}_list(item: {{ table.struct_name }}ListReq) -> Result<Page<{{ table.struct_name }}Vo>> {
+pub async fn list(item: {{ table.struct_name }}ListReq) -> Result<Page<{{ table.struct_name }}Vo>> {
     let rb = pool!();
     let name = item.name;
     let status = item.status;
@@ -19,27 +20,36 @@ pub async fn {{ table.table_name | lower }}_list(item: {{ table.struct_name }}Li
 }
 
 // 添加
-pub async fn {{ table.table_name | lower }}_save(item: {{ table.struct_name }}Vo) -> Result<u64> {
+pub async fn save(item: {{ table.struct_name }}Vo) -> Result<u64> {
     let rb = pool!();
 
     let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
 
     let result = {{ table.struct_name }}::insert(rb, &{{ table.table_name | lower }}).await?;
+     if result.rows_affected == 0 {
+        return Error::err("没有添加数据");
+    }
     Ok(result.rows_affected)
 }
 
 // 更新
-pub async fn {{ table.table_name | lower }}_update(item: {{ table.struct_name }}Vo) -> Result<u64> {
+pub async fn update(item: {{ table.struct_name }}Vo) -> Result<u64> {
     let rb = pool!();
     let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
     let result = {{ table.struct_name }}::update_by_column(rb, &{{ table.table_name | lower }}, "id").await?;
+    if result.rows_affected == 0 {
+        return Error::err("没有更新数据");
+    }
     Ok(result.rows_affected)
 }
 
 // 删除
-pub async fn {{ table.table_name | lower }}_delete(item: {{ table.struct_name }}DeleteReq) -> Result<u64> {
+pub async fn delete(item: {{ table.struct_name }}DeleteReq) -> Result<u64> {
     let rb = pool!();
 
     let result = {{ table.struct_name }}::delete_in_column(rb, "id", &item.ids).await?;
+    if result.rows_affected == 0 {
+        return Error::err("没有删除数据");
+    }
     Ok(result.rows_affected)
 }

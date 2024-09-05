@@ -50,7 +50,10 @@ def run_sql_reverse(template, suffix="", destination_dir="", source_dir="generat
                         f.writelines(modified_content)
                     
                 source_file = os.path.join(source_dir, file)
-                new_file_name = f"{os.path.splitext(file)[0]}{suffix}.rs"
+                if file == "mod.rs":
+                    new_file_name = file
+                else:
+                    new_file_name = f"{os.path.splitext(file)[0]}{suffix}.rs"
                 destination_file = os.path.join(destination_dir, new_file_name)
                 if os.path.isfile(source_file):
                     shutil.copy2(source_file, destination_file)

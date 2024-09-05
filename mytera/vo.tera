@@ -27,6 +27,9 @@ pub struct {{ table.struct_name }}Vo {
     {% if v.comment -%}
 	/// {{ v.comment }}
 	{% endif -%}
+    {% if v.field_name == "id" -%}
+    /// 主键,新增时无需传入
+    {% endif -%}
     #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
     pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
 {%- endfor %}

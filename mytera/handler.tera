@@ -12,8 +12,8 @@ where
     S: Clone + Send + Sync + 'static,
 {
     Router::new()
-        .route("/{{ table.table_name | lower }}_list", post({{ table.table_name | lower }}_list))
-        .route("/{{ table.table_name | lower }}", post({{ table.table_name | lower }}_save).put({{ table.table_name | lower }}_update).delete({{ table.table_name | lower }}_delete))
+        .route("/{{ table.table_name | lower }}_list", post(list))
+        .route("/{{ table.table_name | lower }}", post(save).put(update).delete(delete))
 }
 
 /// 查询
@@ -24,11 +24,11 @@ where
     request_body = {{ table.struct_name }}ListReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "操作成功, code=0, data=[{{ table.struct_name }}ListData]", body = BaseResponse),
+        (status = 200, description = "操作成功, code=0, data=[{{ table.struct_name }}Vo]", body = BaseResponse),
     )
 )]
-pub async fn {{ table.table_name | lower }}_list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl IntoResponse {
-    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_list(item).await;
+pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::list(item).await;
     let total = result.as_ref().map(|data| data.total).unwrap_or(0);
     let result = result.map(|data| data.records);
     Response::result_page(result, total)
@@ -45,8 +45,8 @@ pub async fn {{ table.table_name | lower }}_list(Json(item): Json<{{ table.struc
         (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
     )
 )]
-pub async fn {{ table.table_name | lower }}_save(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
-    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_save(item).await;
+pub async fn save(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::save(item).await;
     Response::result(result)
 }
 
@@ -61,8 +61,8 @@ pub async fn {{ table.table_name | lower }}_save(Json(item): Json<{{ table.struc
         (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
     )
 )]
-pub async fn {{ table.table_name | lower }}_update(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
-    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_update(item).await;
+pub async fn update(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::update(item).await;
     Response::result(result)
 }
 
@@ -77,7 +77,7 @@ pub async fn {{ table.table_name | lower }}_update(Json(item): Json<{{ table.str
         (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
     )
 )]
-pub async fn {{ table.table_name | lower }}_delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
-    let result = {{ table.table_name | lower }}_service::{{ table.table_name | lower }}_delete(item).await;
+pub async fn delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::delete(item).await;
     Response::result(result)
 }

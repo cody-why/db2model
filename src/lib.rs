@@ -2,7 +2,6 @@
 // #![cfg_attr(debug_assertions, allow(dead_code,
 //      unused_imports, unused_variables, unused_mut))]
 
-pub mod model;
 use std::{sync::OnceLock, time::Duration};
 
 pub use ::rbatis::*;
