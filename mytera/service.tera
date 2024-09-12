@@ -20,7 +20,7 @@ pub async fn list(item: {{ table.struct_name }}ListReq) -> Result<Page<{{ table.
 }
 
 // 添加
-pub async fn save(item: {{ table.struct_name }}Vo) -> Result<u64> {
+pub async fn save(item: {{ table.struct_name }}SaveReq) -> Result<u64> {
     let rb = pool!();
 
     let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
@@ -33,7 +33,7 @@ pub async fn save(item: {{ table.struct_name }}Vo) -> Result<u64> {
 }
 
 // 更新
-pub async fn update(item: {{ table.struct_name }}Vo) -> Result<u64> {
+pub async fn update(item: {{ table.struct_name }}UpdateReq) -> Result<u64> {
     let rb = pool!();
     let {{ table.table_name | lower }} = {{ table.struct_name }}::from(item);
     let result = {{ table.struct_name }}::update_by_column(rb, &{{ table.table_name | lower }}, "id").await?;

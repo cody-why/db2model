@@ -13,8 +13,9 @@ include_tables: # Include tables.
   # - currency_type
   # - game_type
   # - wallet_type
-  - sys_operation_log
-  - sys_login_log
+  # - sys_operation_log
+  # - sys_login_log
+  - customer_tag
 exclude_tables: # Exclude, tables, can be ignored.
 #  - table_name
   - casbin_rule

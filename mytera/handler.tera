@@ -39,13 +39,13 @@ pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl Into
     post,
     tag = "{{ table.table_name | lower }}",
     path = "/admin/{{ table.table_name | lower }}",
-    request_body = {{ table.struct_name }}Vo,
+    request_body = {{ table.struct_name }}SaveReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+        (status = 200, description = "操作成功, code=0, data=rows_affected", body = BaseResponse),
     )
 )]
-pub async fn save(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
+pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::save(item).await;
     Response::result(result)
 }
@@ -55,13 +55,13 @@ pub async fn save(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoRespo
     put,
     tag = "{{ table.table_name | lower }}",
     path = "/admin/{{ table.table_name | lower }}",
-    request_body = {{ table.struct_name }}Vo,
+    request_body = {{ table.struct_name }}UpdateReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+        (status = 200, description = "操作成功, code=0, data=rows_affected", body = BaseResponse),
     )
 )]
-pub async fn update(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoResponse {
+pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::update(item).await;
     Response::result(result)
 }
@@ -74,7 +74,7 @@ pub async fn update(Json(item): Json<{{ table.struct_name }}Vo>) -> impl IntoRes
     request_body = {{ table.struct_name }}DeleteReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "操作成功, code=0, data=id", body = BaseResponse),
+        (status = 200, description = "操作成功, code=0, data=rows_affected", body = BaseResponse),
     )
 )]
 pub async fn delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {

@@ -6,6 +6,7 @@ use utoipa::ToSchema;
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct {{ table.struct_name }}ListReq {
+    #[schema(example = 1)]
     pub page_no: u64,
     #[schema(example = 10)]
     pub page_size: u64,
@@ -51,6 +52,63 @@ impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
         {{ table.struct_name }}Vo {
             {%- for v in table.fields %}
             {{ v.field_name }}: {% if v.field_type == "DateTime" %}format_date_option(value.{{ v.field_name }}){% else %}value.{{ v.field_name }}{% endif %},
+            {%- endfor %}
+        }
+    }
+}
+
+
+{% if template.comment -%}
+    /// {{ template.comment }}更新
+{% endif -%}
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
+pub struct {{ table.struct_name }}UpdateReq {
+{%- for v in table.fields %}
+    {% if v.comment -%}
+	/// {{ v.comment }}
+	{% endif -%}
+    {% if v.field_name == "id" -%}
+    /// 主键
+    {% endif -%}
+    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
+    pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
+{%- endfor %}
+}
+
+impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
+    fn from(value: {{ table.struct_name }}UpdateReq) -> Self {
+        let now = Some(DateTime::now());
+        {{ table.struct_name }} {
+            {%- for v in table.fields %}
+            {{ v.field_name }}: {% if v.field_type == "DateTime" %}now.clone(){% else %}value.{{ v.field_name }}{% endif %},
+            {%- endfor %}
+        }
+    }
+}
+
+{% if template.comment -%}
+    /// {{ template.comment }}新增
+{% endif -%}
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
+pub struct {{ table.struct_name }}SaveReq {
+{%- for v in table.fields %}
+    {% if v.comment -%}
+	/// {{ v.comment }}
+	{% endif -%}
+    {% if v.field_name == "id" -%}
+    /// 主键
+    {% endif -%}
+    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
+    pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
+{%- endfor %}
+}
+
+impl From<{{ table.struct_name }}SaveReq> for {{ table.struct_name }} {
+    fn from(value: {{ table.struct_name }}SaveReq) -> Self {
+        let now = Some(DateTime::now());
+        {{ table.struct_name }} {
+            {%- for v in table.fields %}
+            {{ v.field_name }}: {% if v.field_type == "DateTime" %}now.clone(){% else %}value.{{ v.field_name }}{% endif %},
             {%- endfor %}
         }
     }
