@@ -29,11 +29,11 @@ impl {{table.struct_name}} {
 
 rbatis::crud!({{ template.struct_name }}{});
 
-rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_name(name: Option<String>, status: Option<i32>) =>"
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ table.struct_name }}ListReq) =>"
       where 1=1
-     if name != null && name != '':
-       ` and name = #{name}`
-     if status != null :
-       ` and status = #{status}`
+     if req.name != null :
+       ` and name = #{req.name}`
+     if req.status != null :
+       ` and status = #{req.status}`
      if do_count == false:
         ` order by id asc`"});

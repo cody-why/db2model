@@ -9,11 +9,9 @@ use crate::Error;
 
 pub async fn list(item: {{ table.struct_name }}ListReq) -> Result<Page<{{ table.struct_name }}Vo>> {
     let rb = pool!();
-    let name = item.name;
-    let status = item.status;
 
     let page_req = PageRequest::new(item.page_no, item.page_size);
-    let result = {{ table.struct_name }}::select_page_by_name(rb, &page_req, name, status).await?;
+    let result = {{ table.struct_name }}::select_page_by_req(rb, &page_req, &item).await?;
 
     let page = Page::<{{ table.struct_name }}Vo>::from(result);
     Ok(page)
