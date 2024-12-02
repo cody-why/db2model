@@ -5,6 +5,7 @@ use axum::Router;
 use crate::service::{{ table.table_name | lower }}_service;
 use crate::vo::{{ table.table_name | lower }}_vo::*;
 use crate::vo::Response;
+use crate::vo::BaseResponse;
 use crate::Json;
 
 pub fn router<S>() -> Router<S>
@@ -16,7 +17,7 @@ where
         .route("/{{ table.table_name | lower }}", post(save).put(update).delete(delete))
 }
 
-/// 查询
+/// Read
 #[utoipa::path(
     post,
     tag = "{{ table.table_name | lower }}",
@@ -24,7 +25,7 @@ where
     request_body = {{ table.struct_name }}ListReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{msg:'操作成功', code:0, data:[{{ table.struct_name }}Vo]}", body = {{ table.struct_name }}Vo),
+        (status = 200, description = "{code: 0, msg: 'Success', data: [{{ table.struct_name }}Vo]}", body = {{ table.struct_name }}Vo),
     )
 )]
 pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl IntoResponse {
@@ -34,7 +35,7 @@ pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl Into
     Response::result_page(result, total)
 }
 
-/// 添加
+/// Create
 #[utoipa::path(
     post,
     tag = "{{ table.table_name | lower }}",
@@ -42,7 +43,7 @@ pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl Into
     request_body = {{ table.struct_name }}SaveReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{msg:'操作成功', code:0, data:rows_affected}", body = BaseResponse),
+        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
     )
 )]
 pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl IntoResponse {
@@ -50,7 +51,7 @@ pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl Into
     Response::result(result)
 }
 
-/// 更新
+/// Update
 #[utoipa::path(
     put,
     tag = "{{ table.table_name | lower }}",
@@ -58,7 +59,7 @@ pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl Into
     request_body = {{ table.struct_name }}UpdateReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{msg:'操作成功', code:0, data:rows_affected}", body = BaseResponse),
+        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
     )
 )]
 pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl IntoResponse {
@@ -66,7 +67,7 @@ pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl 
     Response::result(result)
 }
 
-/// 删除
+/// Delete
 #[utoipa::path(
     delete,
     tag = "{{ table.table_name | lower }}",
@@ -74,7 +75,7 @@ pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl 
     request_body = {{ table.struct_name }}DeleteReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{msg:'操作成功', code:0, data:rows_affected}", body = BaseResponse),
+        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
     )
 )]
 pub async fn delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
