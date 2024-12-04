@@ -27,13 +27,30 @@ impl {{table.struct_name}} {
     }
 }
 
-rbatis::crud!({{ template.struct_name }}{});
+rbatis::crud!({{ table.struct_name }}{});
 
-rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ table.struct_name }}ListReq) =>"
+
+/**
+#[derive(Default, Debug, Clone, serde::Serialize)]
+pub struct {{ table.struct_name }}PageReq {
+    pub name: Option<String>,
+    pub status: Option<i32>,
+}
+
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ table.struct_name }}PageReq) =>"
       where 1=1
-     if req.name != null :
+     if req.name != null && req.name != '' :
        ` and name = #{req.name}`
      if req.status != null :
        ` and status = #{req.status}`
+     if do_count == false:
+        ` order by id asc`"}); */
+
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(name: Option<String>, status: Option<i32>) =>"
+      where 1=1
+     if name != null && name != '' :
+       ` and name = #{name}`
+     if status != null :
+       ` and status = #{status}`
      if do_count == false:
         ` order by id asc`"});
