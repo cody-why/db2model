@@ -29,8 +29,7 @@ impl {{table.struct_name}} {
 
 rbatis::crud!({{ table.struct_name }}{});
 
-
-/**
+/// 分页参数
 #[derive(Default, Debug, Clone, serde::Serialize)]
 pub struct {{ table.struct_name }}PageReq {
     pub name: Option<String>,
@@ -44,13 +43,51 @@ rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ ta
      if req.status != null :
        ` and status = #{req.status}`
      if do_count == false:
-        ` order by id asc`"}); */
+        ` order by id asc`"}); 
 
-rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(name: Option<String>, status: Option<i32>) =>"
+/**
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req1(name: Option<String>, status: Option<i32>) =>"
       where 1=1
      if name != null && name != '' :
        ` and name = #{name}`
      if status != null :
        ` and status = #{status}`
      if do_count == false:
-        ` order by id asc`"});
+        ` order by id asc`"}); */
+
+impl {{ table.struct_name }} {
+    #[rbatis::py_sql(
+        "`select * from {{ table.struct_name }}`
+        where 1=1
+        
+        if req.name != null && req.name != '':
+          ` and name = #{req.name}`
+        if req.status != null:
+          ` and status = #{status}`
+       
+        ` order by id asc`
+        if req.page_size != null && req.page_no != null :
+          ` limit #{req.page_no}, #{req.page_size}`"
+    )]
+    /// 查询分页数据
+    pub async fn select_page_by_req2(
+      rb: &rbatis::RBatis, req: &{{ table.struct_name }}PageReq
+    ) -> rbatis::Result<Vec<{{ table.struct_name }}>> {
+        rbatis::impled!()
+    }
+
+    #[rbatis::py_sql(
+        "`select count(1) as count from {{ table.struct_name }}`
+        where 1=1
+        if req.name != null && req.name != '':
+          ` and name = #{req.name}`
+        if req.status != null:
+          ` and status = #{req.status}`"
+    )]
+    /// 查询分页总条数,返回(总条数)
+    pub async fn select_page_do_count(
+        rb: &rbatis::RBatis, req: &{{ table.struct_name }}PageReq
+    ) -> rbatis::Result<u64> {
+        rbatis::impled!()
+    }
+}

@@ -17,7 +17,7 @@ where
         .route("/{{ table.table_name | lower }}", post(save).put(update).delete(delete))
 }
 
-/// Read
+/// List page
 #[utoipa::path(
     post,
     tag = "{{ table.table_name | lower }}",
@@ -25,14 +25,14 @@ where
     request_body = {{ table.struct_name }}ListReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{code: 0, data: [{{ table.struct_name }}Vo], msg: 'Success'}", body = {{ table.struct_name }}Vo),
+        (status = 200, description = "{code: 0, data: [{{ table.struct_name }}Vo], total: u64, msg: 'Success'}", body = BaseResponse<{{ table.struct_name }}Vo>),
     )
 )]
 pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::list(item).await;
-    let total = result.as_ref().map(|data| data.total).unwrap_or(0);
-    let result = result.map(|data| data.records);
-    Response::result_page(result, total)
+    let result = result.map(|data| (data.records, data.total));
+    // let result = result.map(|data| (data.0, data.1));
+    Response::result_page(result)
 }
 
 /// Create
