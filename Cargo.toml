@@ -10,7 +10,7 @@ rbatis = "4.5"
 rbs = "4.5"
 rbdc-mysql={version="4.5"}
 serde = {version = "1.0", features = ["derive"] }
-
+into-from = "0.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros"] }

@@ -1,15 +1,20 @@
-use crate::model::{{ table.table_name | lower }}::{{ table.struct_name }};
+use crate::model::{{ table.table_name | lower }}::*;
 use crate::utils::format_date_option;
 use rbatis::rbdc::types::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use into_from::into;
 
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
+#[into({{ table.struct_name }}PageReq)]
 pub struct {{ table.struct_name }}ListReq {
     #[schema(example = 1)]
+    #[into_skip]
     pub page_no: u64,
     #[schema(example = 10)]
+    #[into_skip]
     pub page_size: u64,
+    #[schema(example = "")]
     pub name: Option<String>,
     pub status: Option<i32>,
 }
@@ -46,7 +51,7 @@ impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
 
 
 {% if template.comment -%}
-    /// {{ template.comment }}更新
+    /// {{ template.comment }} Update 
 {% endif -%}
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct {{ table.struct_name }}UpdateReq {
@@ -71,7 +76,7 @@ impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
 }
 
 {% if template.comment -%}
-    /// {{ template.comment }}新增
+    /// {{ template.comment }} Create
 {% endif -%}
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct {{ table.struct_name }}SaveReq {
