@@ -2,10 +2,9 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::Router;
 
+use crate::common::*;
 use crate::service::{{ table.table_name | lower }}_service;
 use crate::vo::{{ table.table_name | lower }}_vo::*;
-use crate::vo::Response;
-use crate::vo::BaseResponse;
 use crate::Json;
 
 pub fn router<S>() -> Router<S>
@@ -14,10 +13,10 @@ where
 {
     Router::new()
         .route("/{{ table.table_name | lower }}/list", post(list))
-        .route("/{{ table.table_name | lower }}", post(save).put(update).delete(delete))
+        .route("/{{ table.table_name | lower }}", post(create).put(update).delete(delete))
 }
 
-/// Read
+/// List
 #[utoipa::path(
     post,
     tag = "{{ table.table_name | lower }}",
@@ -25,14 +24,12 @@ where
     request_body = {{ table.struct_name }}ListReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{code: 0, msg: 'Success', data: [{{ table.struct_name }}Vo]}", body = {{ table.struct_name }}Vo),
+        (status = 200, description = "{code: 0, data: [{{ table.struct_name }}Vo], msg: 'Success'}", body = Response<Page<{{ table.struct_name }}Vo>>),
     )
 )]
 pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::list(item).await;
-    let total = result.as_ref().map(|data| data.total).unwrap_or(0);
-    let result = result.map(|data| data.records);
-    Response::result_page(result, total)
+    PageResponse::from(result)
 }
 
 /// Create
@@ -40,15 +37,15 @@ pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl Into
     post,
     tag = "{{ table.table_name | lower }}",
     path = "/admin/{{ table.table_name | lower }}",
-    request_body = {{ table.struct_name }}SaveReq,
+    request_body = {{ table.struct_name }}CreateReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
+        (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
-pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl IntoResponse {
-    let result = {{ table.table_name | lower }}_service::save(item).await;
-    Response::result(result)
+pub async fn create(Json(item): Json<{{ table.struct_name }}CreateReq>) -> impl IntoResponse {
+    let result = {{ table.table_name | lower }}_service::create(item).await;
+    Response::from(result)
 }
 
 /// Update
@@ -59,12 +56,12 @@ pub async fn save(Json(item): Json<{{ table.struct_name }}SaveReq>) -> impl Into
     request_body = {{ table.struct_name }}UpdateReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
+        (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
 pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::update(item).await;
-    Response::result(result)
+    Response::from(result)
 }
 
 /// Delete
@@ -75,10 +72,10 @@ pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl 
     request_body = {{ table.struct_name }}DeleteReq,
     security(("token"=[])),
     responses(
-        (status = 200, description = "{code: 0, msg: 'Success', data: rows_affected}", body = BaseResponse<u64>),
+        (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
 pub async fn delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
     let result = {{ table.table_name | lower }}_service::delete(item).await;
-    Response::result(result)
+    Response::from(result)
 }

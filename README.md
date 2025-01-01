@@ -1,4 +1,4 @@
-# 从数据库生成模型代码
+# 从数据库生成代码, 包括模型, Axum请求, 增删改查 
 [sql_reverse](https://github.com/ptechen/sql_reverse)
 
 [Rbatis](https://rbatis.github.io/rbatis.io/)
@@ -31,4 +31,8 @@ pub struct Field {
 }
 
 ```
-// NaiveDateTime -> DateTime
+// 修改了映射 NaiveDateTime -> DateTime
+
+{% -%} // 带-表示紧靠的代码块
+{% %} // 不带-表示换行的代码块
+

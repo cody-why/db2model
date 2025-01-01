@@ -7,9 +7,9 @@ use rbatis::{rbdc::db, RBatis};
 pub fn get_pool() -> &'static RBatis {
     static RB: OnceLock<RBatis> = OnceLock::new();
     RB.get_or_init(|| {
-        //  dotenv::dotenv().ok();
-        //  let url = std::env::var("DATABASE_URL").unwrap();
-        let url = include_str!("../.env").replace("DATABASE_URL=", "");
+        dotenv::dotenv().ok();
+        let url = std::env::var("DATABASE_URL").unwrap();
+        // let url = include_str!("../.env").replace("DATABASE_URL=", "");
         let rb = RBatis::new();
         rb.init(rbdc_mysql::Driver {}, &url).unwrap();
         rb

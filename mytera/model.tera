@@ -1,21 +1,20 @@
-#![allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 use rbatis::rbdc::types::*;
 
 /// {{table.table_name}}
-{% if template.comment -%}
-    /// {{ template.comment }}
+{% if table.comment -%}
+/// {{ table.comment }}
 {% endif -%}
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct {{ table.struct_name }} {
 {%- for v in table.fields %}
 	{% if v.comment -%}
-	    /// {{ v.comment }}
+	/// {{ v.comment }}
 	{% endif -%}
     {% if v.field_name == 'type' -%}
-        pub r#type: Option<{{ v.field_type }}>,
+    pub r#type: Option<{{ v.field_type }}>,
     {%- else -%}
-        pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- endif -%}
     
 {%- endfor %}
@@ -27,13 +26,29 @@ impl {{table.struct_name}} {
     }
 }
 
-rbatis::crud!({{ template.struct_name }}{});
+rbatis::crud!({{ table.struct_name }}{});
 
-rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ table.struct_name }}ListReq) =>"
+/// 分页参数
+#[derive(Default, Debug, Clone, serde::Serialize)]
+pub struct {{ table.struct_name }}PageReq {
+    pub name: Option<String>,
+    pub status: Option<i32>,
+}
+
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_req(req: &{{ table.struct_name }}PageReq) =>"
       where 1=1
-     if req.name != null :
+     if req.name != null && req.name != '' :
        ` and name = #{req.name}`
      if req.status != null :
        ` and status = #{req.status}`
+     if do_count == false:
+        ` order by id asc`"}); 
+
+rbatis::impl_select_page!({{ table.struct_name }}{select_page_by_params(name: Option<String>, status: Option<i32>) =>"
+      where 1=1
+     if name != null && name != '' :
+       ` and name = #{name}`
+     if status != null :
+       ` and status = #{status}`
      if do_count == false:
         ` order by id asc`"});

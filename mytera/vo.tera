@@ -1,61 +1,120 @@
-use crate::model::{{ table.table_name | lower }}::{{ table.struct_name }};
-use crate::utils::format_date_option;
 use rbatis::rbdc::types::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
+use crate::model::{{ table.table_name | lower }}::*;
+use crate::utils::format_date_option;
+
+{% if table.comment -%}
+/// {{ table.comment }} List Req
+{% else -%}
+/// {{ table.struct_name }} List Req
+{% endif -%}
+#[derive(Debug, Deserialize, Serialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}ListReq {
+    /// 页码
     #[schema(example = 1)]
-    pub page_no: u64,
+    pub page_no: Option<u64>,
+    /// 页大小
     #[schema(example = 10)]
-    pub page_size: u64,
+    pub page_size: Option<u64>,
+    /// 名称
+    #[validate(length(max = 32))]
+    #[schema(example = "")]
     pub name: Option<String>,
+    /// 状态
+    #[schema(example = 1)]
     pub status: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct {{ table.struct_name }}DeleteReq {
-    pub ids: Vec<u64>,
-}
-
-{% if template.comment -%}
-    /// {{ template.comment }}
-{% endif -%}
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
-pub struct {{ table.struct_name }}Vo {
-{%- for v in table.fields %}
-    {% if v.comment -%}
-	/// {{ v.comment }}
-	{% endif -%}
-    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
-    pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
-{%- endfor %}
-}
-
-
-impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
-    fn from(value: {{ table.struct_name }}) -> Self {
-        {{ table.struct_name }}Vo {
-            {%- for v in table.fields %}
-            {{ v.field_name }}: {% if v.field_type == "DateTime" %}format_date_option(value.{{ v.field_name }}){% else %}value.{{ v.field_name }}{% endif %},
-            {%- endfor %}
+impl From<{{ table.struct_name }}ListReq> for {{ table.struct_name }}PageReq {
+    fn from(value: {{ table.struct_name }}ListReq) -> Self {
+        {{ table.struct_name }}PageReq {
+            name: value.name,
+            status: value.status,
         }
     }
 }
 
-
-{% if template.comment -%}
-    /// {{ template.comment }}更新
+{% if table.comment -%}
+/// {{ table.comment }} Delete Req
+{% else -%}
+/// {{ table.struct_name }} Delete Req
 {% endif -%}
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, Validate)]
+pub struct {{ table.struct_name }}DeleteReq {
+    #[validate(length(min = 1, max = 100))]
+    pub ids: Vec<String>,
+}
+
+{% if table.comment -%}
+/// {{ table.comment }} Vo
+{% else -%}
+/// {{ table.struct_name }} Vo
+{% endif -%}
+#[derive(Debug, Serialize, ToSchema)]
+pub struct {{ table.struct_name }}Vo {
+{%- for v in table.fields %}
+    {% if v.comment -%}
+    /// {{ v.comment }}
+	{% endif -%}
+    {% if v.field_name == "id" -%}
+    #[schema(example = "")]
+    pub {{ v.field_name }}: Option<String>,
+    {%- elif v.field_type == "Decimal" -%}
+    #[schema(example = "", value_type = Option<String>)]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    #[schema(example = "")]
+    pub {{ v.field_name }}: Option<String>,
+    {%- else -%}
+    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" %}1{% else %}""{% endif %})]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- endif -%}
+{%- endfor %}
+}
+
+impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
+    fn from(value: {{ table.struct_name }}) -> Self {
+        {{ table.struct_name }}Vo {
+        {%- for v in table.fields %}
+            {% if v.field_name == "id" -%}
+            {{ v.field_name }}: value.{{ v.field_name }}.map(|v| v.to_string()),
+            {%- elif v.field_type == "DateTime" -%}
+            {{ v.field_name }}: format_date_option(value.{{ v.field_name }}),
+            {%- else -%}
+            {{ v.field_name }}: value.{{ v.field_name }},
+            {%- endif -%}
+        {%- endfor %}
+        }
+    }
+}
+
+{% if table.comment -%}
+/// {{ table.comment }} Update Req
+{% else -%}
+/// {{ table.struct_name }} Update Req
+{% endif -%}
+#[derive(Debug, Deserialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}UpdateReq {
 {%- for v in table.fields %}
     {% if v.comment -%}
 	/// {{ v.comment }}
 	{% endif -%}
-    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
-    pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
+    {%- if v.field_name == "id" -%}
+    #[schema(example = "")]
+    pub {{ v.field_name }}: Option<String>,
+    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    #[schema(example = "")]
+    pub {{ v.field_name }}: Option<String>,
+    {%- elif v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" -%}
+    #[schema(example = 0)]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- else -%}
+    #[schema(example = {% if v.field_type == "String" %}""{% else %}"", value_type = Option<String>{% endif %})]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- endif -%}
 {%- endfor %}
 }
 
@@ -63,34 +122,56 @@ impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
     fn from(value: {{ table.struct_name }}UpdateReq) -> Self {
         let now = Some(DateTime::now());
         {{ table.struct_name }} {
-            {%- for v in table.fields %}
-            {{ v.field_name }}: {% if v.field_type == "DateTime" %}now.clone(){% else %}value.{{ v.field_name }}{% endif %},
-            {%- endfor %}
+        {%- for v in table.fields %}
+            {% if v.field_name == "id" -%}
+            {{ v.field_name }}: value.{{ v.field_name }}.map(|v| v.parse().ok()).unwrap_or(None),
+            {%- elif v.field_type == "DateTime" -%}
+            {{ v.field_name }}: now.clone(),
+            {%- else -%}
+            {{ v.field_name }}: value.{{ v.field_name }},
+            {%- endif -%}
+        {%- endfor %}
         }
     }
 }
 
-{% if template.comment -%}
-    /// {{ template.comment }}新增
+{% if table.comment -%}
+/// {{ table.comment }} Create Req
+{% else -%}
+/// {{ table.struct_name }} Create Req
 {% endif -%}
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
-pub struct {{ table.struct_name }}SaveReq {
+#[derive(Debug, Deserialize, ToSchema, Validate)]
+pub struct {{ table.struct_name }}CreateReq {
 {%- for v in table.fields %}
-    {% if v.comment -%}
-	/// {{ v.comment }}
+    {% if v.comment and v.field_name != "id" -%}
+    /// {{ v.comment }}
 	{% endif -%}
-    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" %}0{% else %}""{% endif %})]
-    pub {{ v.field_name }}: Option<{% if v.field_type == "DateTime" %}String{% else %}{{ v.field_type }}{% endif %}>,
+    {%- if v.field_name == "id" -%}
+    // pub {{ v.field_name }}: Option<String>,
+    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    #[schema(example = "")]
+    pub {{ v.field_name }}: Option<String>,
+    {%- elif v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" -%}
+    #[schema(example = 0)]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- else -%}
+    #[schema(example = {% if v.field_type == "String" %}""{% else %}"", value_type = Option<String>{% endif %})]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- endif -%}
 {%- endfor %}
 }
 
-impl From<{{ table.struct_name }}SaveReq> for {{ table.struct_name }} {
-    fn from(value: {{ table.struct_name }}SaveReq) -> Self {
+impl From<{{ table.struct_name }}CreateReq> for {{ table.struct_name }} {
+    fn from(value: {{ table.struct_name }}CreateReq) -> Self {
         let now = Some(DateTime::now());
         {{ table.struct_name }} {
-            {%- for v in table.fields %}
+        {%- for v in table.fields %}
+            {% if v.field_name == "id" -%}
+            {{ v.field_name }}: None,
+            {%- else -%}
             {{ v.field_name }}: {% if v.field_type == "DateTime" %}now.clone(){% else %}value.{{ v.field_name }}{% endif %},
-            {%- endfor %}
+            {%- endif -%}
+        {%- endfor %}
         }
     }
 }
