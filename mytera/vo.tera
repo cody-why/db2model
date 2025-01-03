@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
 
+use api_utils::serde::*;
+
 use crate::model::{{ table.table_name | lower }}::*;
 use crate::utils::format_date_option;
 
@@ -45,7 +47,8 @@ impl From<{{ table.struct_name }}ListReq> for {{ table.struct_name }}PageReq {
 #[derive(Debug, Deserialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}DeleteReq {
     #[validate(length(min = 1, max = 100))]
-    pub ids: Vec<String>,
+    #[serde(with = "serde_id_vec")]
+    pub ids: Vec<U64>,
 }
 
 {% if table.comment -%}
@@ -61,15 +64,13 @@ pub struct {{ table.struct_name }}Vo {
 	{% endif -%}
     {% if v.field_name == "id" -%}
     #[schema(example = "")]
-    pub {{ v.field_name }}: Option<String>,
-    {%- elif v.field_type == "Decimal" -%}
-    #[schema(example = "", value_type = Option<String>)]
+    #[serde(with = "serde_id")]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
-    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    {%- elif v.field_type == "String" or v.field_type == "DateTime" or v.field_type == "Date" -%}
     #[schema(example = "")]
     pub {{ v.field_name }}: Option<String>,
     {%- else -%}
-    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" %}1{% else %}""{% endif %})]
+    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" %}0{% else %}"", value_type = Option<String>{% endif %})]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- endif -%}
 {%- endfor %}
@@ -80,7 +81,7 @@ impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
         {{ table.struct_name }}Vo {
         {%- for v in table.fields %}
             {% if v.field_name == "id" -%}
-            {{ v.field_name }}: value.{{ v.field_name }}.map(|v| v.to_string()),
+            {{ v.field_name }}: value.{{ v.field_name }},
             {%- elif v.field_type == "DateTime" -%}
             {{ v.field_name }}: format_date_option(value.{{ v.field_name }}),
             {%- else -%}
@@ -104,15 +105,16 @@ pub struct {{ table.struct_name }}UpdateReq {
 	{% endif -%}
     {%- if v.field_name == "id" -%}
     #[schema(example = "")]
-    pub {{ v.field_name }}: Option<String>,
-    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    #[serde(with = "serde_id")]
+    pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- elif v.field_type == "String" or v.field_type == "DateTime" or v.field_type == "Date" -%}
     #[schema(example = "")]
     pub {{ v.field_name }}: Option<String>,
     {%- elif v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" -%}
     #[schema(example = 0)]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- else -%}
-    #[schema(example = {% if v.field_type == "String" %}""{% else %}"", value_type = Option<String>{% endif %})]
+    #[schema(example = "", value_type = Option<String>)]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- endif -%}
 {%- endfor %}
@@ -124,7 +126,7 @@ impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
         {{ table.struct_name }} {
         {%- for v in table.fields %}
             {% if v.field_name == "id" -%}
-            {{ v.field_name }}: value.{{ v.field_name }}.map(|v| v.parse().ok()).unwrap_or(None),
+            {{ v.field_name }}: value.{{ v.field_name }},
             {%- elif v.field_type == "DateTime" -%}
             {{ v.field_name }}: now.clone(),
             {%- else -%}
@@ -147,15 +149,15 @@ pub struct {{ table.struct_name }}CreateReq {
     /// {{ v.comment }}
 	{% endif -%}
     {%- if v.field_name == "id" -%}
-    // pub {{ v.field_name }}: Option<String>,
-    {%- elif v.field_type == "DateTime" or v.field_type == "Date" -%}
+    // pub {{ v.field_name }}: Option<{{ v.field_type }}>,
+    {%- elif v.field_type == "String" or v.field_type == "DateTime" or v.field_type == "Date" -%}
     #[schema(example = "")]
     pub {{ v.field_name }}: Option<String>,
     {%- elif v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" -%}
     #[schema(example = 0)]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- else -%}
-    #[schema(example = {% if v.field_type == "String" %}""{% else %}"", value_type = Option<String>{% endif %})]
+    #[schema(example = "", value_type = Option<String>)]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- endif -%}
 {%- endfor %}
