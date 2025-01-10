@@ -3,9 +3,12 @@ use axum::routing::post;
 use axum::Router;
 
 use crate::common::*;
+use crate::middleware::context::UserContext;
+use crate::service::sys_operation_log_service::OperationLog;
 use crate::service::{{ table.table_name | lower }}_service;
 use crate::vo::{{ table.table_name | lower }}_vo::*;
 use crate::Json;
+
 
 pub fn router<S>() -> Router<S>
 where
@@ -43,8 +46,14 @@ pub async fn list(Json(item): Json<{{ table.struct_name }}ListReq>) -> impl Into
         (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
-pub async fn create(Json(item): Json<{{ table.struct_name }}CreateReq>) -> impl IntoResponse {
+pub async fn create(content: UserContext, Json(item): Json<{{ table.struct_name }}CreateReq>) -> impl IntoResponse {
+    {% if table.comment -%}
+    let log = OperationLog::new("{{ table.comment }}", "Create", &item);
+    {% else -%}
+    let log = OperationLog::new("{{ table.table_name }}", "Create", &item);
+    {% endif -%}
     let result = {{ table.table_name | lower }}_service::create(item).await;
+    log.save(&content, &result).await;
     Response::from(result)
 }
 
@@ -59,8 +68,14 @@ pub async fn create(Json(item): Json<{{ table.struct_name }}CreateReq>) -> impl 
         (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
-pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl IntoResponse {
+pub async fn update(content: UserContext, Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl IntoResponse {
+    {% if table.comment -%}
+    let log = OperationLog::new("{{ table.comment }}", "Update", &item);
+    {% else -%}
+    let log = OperationLog::new("{{ table.table_name }}", "Update", &item);
+    {% endif -%}
     let result = {{ table.table_name | lower }}_service::update(item).await;
+    log.save(&content, &result).await;
     Response::from(result)
 }
 
@@ -75,7 +90,13 @@ pub async fn update(Json(item): Json<{{ table.struct_name }}UpdateReq>) -> impl 
         (status = 200, description = "{code: 0, data: rows_affected, msg: 'Success'}", body = Response<u64>),
     )
 )]
-pub async fn delete(Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
+pub async fn delete(content: UserContext, Json(item): Json<{{ table.struct_name }}DeleteReq>) -> impl IntoResponse {
+    {% if table.comment -%}
+    let log = OperationLog::new("{{ table.comment }}", "Delete", &item);
+    {% else -%}
+    let log = OperationLog::new("{{ table.table_name }}", "Delete", &item);
+    {% endif -%}
     let result = {{ table.table_name | lower }}_service::delete(item).await;
+    log.save(&content, &result).await;
     Response::from(result)
 }

@@ -44,11 +44,11 @@ impl From<{{ table.struct_name }}ListReq> for {{ table.struct_name }}PageReq {
 {% else -%}
 /// {{ table.struct_name }} Delete Req
 {% endif -%}
-#[derive(Debug, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Deserialize, Serialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}DeleteReq {
     #[validate(length(min = 1, max = 100))]
     #[serde(with = "serde_id_vec")]
-    pub ids: Vec<U64>,
+    pub ids: Vec<i64>,
 }
 
 {% if table.comment -%}
@@ -70,7 +70,7 @@ pub struct {{ table.struct_name }}Vo {
     #[schema(example = "")]
     pub {{ v.field_name }}: Option<String>,
     {%- else -%}
-    #[schema(example = {% if v.field_type == "i32" or v.field_type == "u64" or v.field_type == "i8" %}0{% else %}"", value_type = Option<String>{% endif %})]
+    #[schema(example = {% if v.field_type == "i32" or v.field_type == "i64" or v.field_type == "u64" or v.field_type == "i8" %}0{% else %}"", value_type = Option<String>{% endif %})]
     pub {{ v.field_name }}: Option<{{ v.field_type }}>,
     {%- endif -%}
 {%- endfor %}
@@ -97,7 +97,7 @@ impl From<{{ table.struct_name }}> for {{ table.struct_name }}Vo {
 {% else -%}
 /// {{ table.struct_name }} Update Req
 {% endif -%}
-#[derive(Debug, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Deserialize, Serialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}UpdateReq {
 {%- for v in table.fields %}
     {% if v.comment -%}
@@ -142,7 +142,7 @@ impl From<{{ table.struct_name }}UpdateReq> for {{ table.struct_name }} {
 {% else -%}
 /// {{ table.struct_name }} Create Req
 {% endif -%}
-#[derive(Debug, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Deserialize, Serialize, ToSchema, Validate)]
 pub struct {{ table.struct_name }}CreateReq {
 {%- for v in table.fields %}
     {% if v.comment and v.field_name != "id" -%}
